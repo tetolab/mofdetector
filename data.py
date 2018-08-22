@@ -20,6 +20,7 @@ def convert_image_df_to_numpy(image_dataframe):
 # a tensor of 32 bit floats in the 0.0-1.0 range.
 # Fortunately tensorflow has a convenient helper function for this:
 def convert_image_to_tf_whc(image):
+    image = tf.convert_to_tensor(image, dtype=tf.float32)
     image = tf.image.convert_image_dtype([image], dtype=tf.float32)
     return tf.reshape(image, (-1, 28, 28, 1))
 
@@ -31,18 +32,21 @@ def flip_and_rotate(image):
 
 def convert_labels(labels):
     y = np.asarray(labels)
-    y = np.piecewise(y, [(y != 6) & (y != 13), y == 6, y == 13], [0, 1, 2])
-    y = tf.one_hot(y, 3, dtype=tf.int32)
-    return tf.reshape(y, (-1, 3))
+    y = np.piecewise(y, [(y != 6) & (y != 13), y == 6, y == 13], [0, 0, 1])
+    return y
 
 
 def get_training_data():
     dataframe = get_data_as_dataframe()
+    q = dataframe.iloc[:, 0]
+    dataframe = dataframe[(q == 13) | (q == 6)]
     return get_data(dataframe)
 
 
 def get_test_data():
     dataframe = get_test_data_as_dataframe()
+    q = dataframe.iloc[:, 0]
+    dataframe = dataframe[(q == 13) | (q == 6)]
     return get_data(dataframe)
 
 
@@ -57,7 +61,7 @@ def get_data(dataframe):
 
 
 def get_data_as_dataframe():
-    return pd.read_csv("data/emnist-letters-train.csv")
+    return pd.read_csv("data/emnist-letters-train.csv", header=None)
 
 
 def get_test_data_as_dataframe():
